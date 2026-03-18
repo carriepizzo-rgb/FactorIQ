@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FactorIQ — Prospect Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --cream:#FAF7F2;--cream2:#F2EDE4;--cream3:#E8E0D4;
+  --mauve:#B08A96;--mauve-dark:#7D5C68;--mauve-light:#EDE0E4;--mauve-xlight:#F7F0F2;
+  --text:#2C1F24;--muted:#8C7A80;--border:#DDD4CC;--white:#FDFAF7;
+  --green:#5C7A5C;--amber:#B08A3A;--red:#A0525C;--red-light:#FCEEE0;
+  --li:#0A66C2;
+}
+html,body{min-height:100%;background:var(--cream);}
+body{font-family:'Jost',sans-serif;color:var(--text);}
+.page{max-width:720px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+.hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600;color:var(--text);letter-spacing:-0.5px;line-height:1;}
+.brand-name span{color:var(--mauve);}
+.brand-sub{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px;font-weight:300;}
+.badge{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;background:var(--mauve-light);color:var(--mauve-dark);padding:4px 12px;border-radius:20px;font-weight:500;}
+
+
+
+
+
+.key-input:focus{border-color:var(--mauve);}
+
+.key-btn:hover{background:var(--mauve-dark);}
+
+.key-hint a{color:var(--mauve-dark);}
+
+.steps{display:flex;align-items:center;margin-bottom:2.5rem;}
+.step-item{display:flex;align-items:center;gap:6px;flex:1;cursor:pointer;}
+.step-circle{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:var(--muted);flex-shrink:0;transition:all 0.25s;}
+.step-circle.active{background:var(--mauve);border-color:var(--mauve);color:#fff;}
+.step-circle.done{background:var(--mauve-light);border-color:var(--mauve);color:var(--mauve-dark);}
+.step-name{font-size:11px;color:var(--muted);transition:color 0.25s;white-space:nowrap;}
+.step-name.active{color:var(--text);font-weight:500;}
+.step-name.done{color:var(--mauve-dark);}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 4px;transition:background 0.3s;}
+.step-line.done{background:var(--mauve);}
+.panel{display:none;}
+.panel.show{display:block;animation:soft 0.3s ease;}
+@keyframes soft{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.section-eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--mauve);margin-bottom:6px;font-weight:500;}
+.section-heading{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.2;}
+.section-explain{font-size:13px;color:#fff;background:var(--mauve);border-radius:10px;padding:10px 14px;margin-bottom:1.75rem;line-height:1.6;font-weight:300;}
+.section-explain strong{font-weight:500;}
+.field-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:400;}
+.field-hint{font-size:12px;color:var(--muted);font-weight:300;margin-bottom:14px;line-height:1.6;}
+.upload-zone{border:1px dashed var(--cream3);border-radius:16px;padding:2.75rem 1.5rem;text-align:center;background:var(--white);cursor:pointer;transition:all 0.2s;margin-bottom:1.5rem;}
+.upload-zone:hover,.upload-zone.has-file{border-color:var(--mauve);background:var(--mauve-xlight);}
+.up-dot{width:48px;height:48px;border-radius:50%;background:var(--cream2);border:1px solid var(--cream3);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.up-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--text);margin-bottom:5px;}
+.up-sub{font-size:12px;color:var(--muted);font-weight:300;}
+.up-file{font-size:12px;color:var(--mauve-dark);margin-top:10px;font-weight:500;}
+.preview-box{background:var(--cream);border-radius:10px;padding:10px 14px;margin-bottom:1.5rem;display:none;}
+.preview-box.show{display:block;}
+.preview-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:400;}
+.preview-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.preview-tag{font-size:12px;background:var(--mauve-light);color:var(--mauve-dark);padding:3px 10px;border-radius:20px;}
+.preview-tag.more{background:var(--cream3);color:var(--muted);}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.75rem;}
+@media(max-width:480px){.btn-grid{grid-template-columns:1fr;}}
+.sel-card{border:2px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--white);cursor:pointer;transition:border-color 0.15s,background 0.15s;text-align:left;width:100%;font-family:'Jost',sans-serif;}
+.sel-card:hover{border-color:var(--mauve);background:var(--mauve-xlight);}
+.sel-card.on{border-color:var(--mauve-dark);background:var(--mauve);}
+.sel-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.sel-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.3;}
+.sel-card.on .sel-title{color:#fff;}
+.sel-check{width:17px;height:17px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:1px;}
+.sel-card.on .sel-check{background:rgba(255,255,255,0.25);border-color:rgba(255,255,255,0.6);}
+.sel-dot{width:7px;height:7px;border-radius:50%;background:var(--mauve-dark);opacity:0;transition:opacity 0.15s;}
+.sel-card.on .sel-dot{opacity:1;background:#fff;}
+.sel-desc{font-size:12px;color:var(--muted);font-weight:300;line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px solid var(--cream3);display:none;}
+.sel-card.on .sel-desc{display:block;color:rgba(255,255,255,0.85);border-top-color:rgba(255,255,255,0.2);}
+.cta{width:100%;padding:14px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;font-family:'Jost',sans-serif;font-weight:500;background:var(--text);color:var(--cream);border:none;border-radius:12px;cursor:pointer;transition:all 0.2s;margin-top:4px;}
+.cta:hover{background:var(--mauve-dark);}
+.cta:disabled{opacity:0.3;cursor:not-allowed;}
+.back-link{font-size:12px;color:var(--muted);cursor:pointer;margin-top:14px;display:inline-flex;align-items:center;gap:4px;transition:color 0.15s;background:none;border:none;font-family:'Jost',sans-serif;}
+.back-link:hover{color:var(--mauve-dark);}
+.loader{text-align:center;padding:3rem 1rem;}
+.loader-dots{display:flex;gap:6px;justify-content:center;margin-bottom:16px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--mauve);animation:pulse 1.2s ease-in-out infinite;}
+.dot:nth-child(2){animation-delay:0.2s;}
+.dot:nth-child(3){animation-delay:0.4s;}
+@keyframes pulse{0%,100%{opacity:0.25;transform:scale(0.8);}50%{opacity:1;transform:scale(1);}}
+.loader-txt{font-size:13px;color:var(--muted);font-weight:300;}
+.loader-co{font-size:12px;color:var(--mauve);margin-top:6px;font-weight:400;min-height:18px;}
+.prog-bg{height:4px;background:var(--cream3);border-radius:2px;margin:12px auto 0;max-width:200px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--mauve);border-radius:2px;transition:width 0.5s ease;}
+.error-box{background:var(--red-light);border:1px solid #E8C4B8;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--red);line-height:1.6;margin-bottom:1rem;display:none;}
+.error-box.show{display:block;}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.75rem;}
+.stat{background:var(--white);border-radius:12px;padding:14px;text-align:center;border:1px solid var(--border);}
+.stat-n{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--text);line-height:1;}
+.stat-n.accent{color:var(--mauve-dark);}
+.stat-n.urgent{color:var(--red);}
+.stat-l{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:4px;font-weight:300;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:12px;transition:border-color 0.15s;}
+.card:hover{border-color:var(--mauve);}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:14px;}
+.c-name{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.c-loc{font-size:11px;color:var(--muted);letter-spacing:0.5px;font-weight:300;}
+.scores-row{display:flex;gap:12px;flex-shrink:0;}
+.score-col{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.score-num{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;line-height:1;}
+.score-lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.score-div{width:1px;background:var(--border);align-self:stretch;margin:2px 0;}
+.s-hi{color:var(--green);}.s-md{color:var(--amber);}.s-lo{color:var(--red);}
+.s-urg-hi{color:var(--red);}.s-urg-md{color:var(--amber);}.s-urg-lo{color:var(--green);}
+.s-fit-hi{color:var(--mauve-dark);}.s-fit-md{color:var(--mauve);}.s-fit-lo{color:var(--muted);}
+.fl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:400;}
+.fv{font-size:13px;color:var(--text);line-height:1.65;font-weight:300;}
+.hr{height:1px;background:var(--border);margin:12px 0;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+@media(max-width:480px){.g2{grid-template-columns:1fr;}}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+.tag{font-size:11px;padding:3px 10px;border-radius:6px;font-weight:400;}
+.tmauve{background:var(--mauve-light);color:var(--mauve-dark);}
+.urg-bg{height:5px;background:var(--cream3);border-radius:3px;overflow:hidden;margin-top:6px;}
+.urg-fill{height:100%;border-radius:3px;}
+.urg-lbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:300;}
+.why-box{background:var(--red-light);border:1px solid #E8C4B8;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px;}
+.why-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:3px;}
+.why-txt{font-size:12px;color:var(--red);line-height:1.6;}
+.cfoot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.fund{font-size:12px;color:var(--muted);font-weight:300;}
+.fund strong{color:var(--mauve-dark);font-weight:500;}
+.acts{display:flex;gap:6px;flex-wrap:wrap;}
+.btn-s{font-size:11px;letter-spacing:0.5px;text-transform:uppercase;padding:7px 13px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-family:'Jost',sans-serif;transition:all 0.15s;}
+.btn-s:hover{background:var(--mauve-xlight);border-color:var(--mauve);}
+.btn-s.ps{background:var(--mauve);color:#fff;border-color:var(--mauve);}
+.btn-s.ps:hover{background:var(--mauve-dark);}
+.btn-s.li{background:var(--li);color:#fff;border-color:var(--li);}
+.btn-s.li:hover{background:#085099;}
+.out-panel{display:none;margin-top:12px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.out-panel.show{display:block;animation:soft 0.2s ease;}
+.o-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;padding:10px 14px 0;}
+.o-msg{font-size:13px;color:var(--text);line-height:1.75;font-weight:300;white-space:pre-line;padding:8px 14px 12px;}
+.o-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:var(--cream);}
+.o-hint{font-size:11px;color:var(--muted);font-weight:300;}
+.restart{font-size:12px;color:var(--muted);cursor:pointer;margin-top:1rem;display:inline-block;transition:color 0.15s;background:none;border:none;font-family:'Jost',sans-serif;}
+.restart:hover{color:var(--mauve-dark);}
+.page-footer{text-align:center;margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);}
+.page-footer p{font-size:11px;color:var(--muted);font-weight:300;letter-spacing:0.5px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hdr">
+    <div>
+      <div class="brand-name">Factor<span>IQ</span></div>
+      <div class="brand-sub">Prospect Intelligence</div>
+    </div>
+    <div class="badge">Beta</div>
+  </div>
+
+
+
+  <div class="steps">
+    <div class="step-item" onclick="go(1)"><div class="step-circle active" id="sc1">1</div><div class="step-name active" id="sn1">Upload</div></div>
+    <div class="step-line" id="sl1"></div>
+    <div class="step-item" onclick="go(2)"><div class="step-circle" id="sc2">2</div><div class="step-name" id="sn2">Focus</div></div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step-item" onclick="go(3)"><div class="step-circle" id="sc3">3</div><div class="step-name" id="sn3">Signals</div></div>
+    <div class="step-line" id="sl3"></div>
+    <div class="step-item" onclick="go(4)"><div class="step-circle" id="sc4">4</div><div class="step-name" id="sn4">Results</div></div>
+  </div>
+
+  <div class="panel show" id="p1">
+    <div class="section-eyebrow">Step one</div>
+    <div class="section-heading">Upload your list.</div>
+    <div class="section-explain">Drop in your CSV or Excel file with your target companies. The AI will research each one — <strong>no manual Googling needed.</strong></div>
+    <div class="upload-zone" id="dropzone" onclick="document.getElementById('fi').click()">
+      <div class="up-dot">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v10M6 7l4-4 4 4" stroke="#B08A96" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14.5v.5A2 2 0 005 17h10a2 2 0 002-2v-.5" stroke="#B08A96" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="up-title">Drop your file here</div>
+      <div class="up-sub">.xlsx .csv .xls accepted</div>
+      <div class="up-file" id="fname"></div>
+      <input type="file" id="fi" style="display:none" accept=".xlsx,.csv,.xls,.txt" onchange="gotFile(event)"/>
+    </div>
+    <div class="preview-box" id="preview-box">
+      <div class="preview-label">Companies detected</div>
+      <div class="preview-tags" id="preview-tags"></div>
+    </div>
+    <div class="field-label">Your service</div>
+    <div class="field-hint">Click each one to select it and see what it means.</div>
+    <div class="btn-grid" id="svc-grid"></div>
+    <button class="cta" id="btn1" onclick="go(2)" disabled>Continue</button>
+  </div>
+
+  <div class="panel" id="p2">
+    <div class="section-eyebrow">Step two</div>
+    <div class="section-heading">What should we analyze?</div>
+    <div class="section-explain"><strong>Focus areas</strong> shape what we dig into for each company. Click any option to learn more about it.</div>
+    <div class="btn-grid" id="focus-grid"></div>
+    <button class="cta" id="btn2" onclick="go(3)" disabled>Continue</button>
+    <button class="back-link" onclick="go(1)">← Back</button>
+  </div>
+
+  <div class="panel" id="p3">
+    <div class="section-eyebrow">Step three</div>
+    <div class="section-heading">What is your trigger?</div>
+    <div class="section-explain"><strong>Priority signals</strong> are recent events that tell you when to reach out. Click any option to learn more.</div>
+    <div class="btn-grid" id="signal-grid"></div>
+    <button class="cta" id="btn3" onclick="go(4)" disabled>Generate snapshots</button>
+    <button class="back-link" onclick="go(2)">← Back</button>
+  </div>
+
+  <div class="panel" id="p4">
+    <div id="loader" class="loader">
+      <div class="loader-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div class="loader-txt">Researching your companies with AI...</div>
+      <div class="loader-co" id="loader-co"></div>
+      <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="error-box" id="error-box"></div>
+    <div id="res" style="display:none;"></div>
+  </div>
+
+  <div class="page-footer"><p>FactorIQ &mdash; Built for factoring professionals &mdash; Beta</p></div>
+</div>
+
+<script>
+const SERVICES=[
+  {id:'invoice',l:'Invoice factoring',desc:'When a company sends an invoice but cannot wait 60 days to get paid, we buy that invoice and give them cash now.'},
+  {id:'payroll',l:'Payroll funding',desc:'Helps companies make payroll on time even when clients have not paid yet. Common for staffing firms with weekly payroll obligations.'},
+  {id:'ar',l:'Accounts receivable financing',desc:'A company borrows against the value of their outstanding invoices without having to sell them outright.'},
+  {id:'abl',l:'Asset-based lending',desc:'A loan secured by business assets like equipment or inventory rather than credit history.'},
+  {id:'wcl',l:'Working capital loans',desc:'Short-term funding to cover payroll, rent, supplies, and other operating costs day to day.'},
+  {id:'po',l:'Purchase order financing',desc:'Funding given upfront so a company can fulfill a large order before they have received payment from their customer.'},
+];
+const FOCUS=[
+  {id:'cash',l:'Cash flow pressure',desc:'We look at whether this company is likely stretched thin financially — slow paying clients, high overhead, or rapid scaling that outpaces revenue.'},
+  {id:'growth',l:'Rapid growth',desc:'We look at how fast the company is expanding. Fast growth usually means cash is tight before it is flush.'},
+  {id:'payroll',l:'High payroll volume',desc:'We estimate how large their weekly payroll obligation is. The bigger the payroll, the bigger the funding gap when clients pay slow.'},
+];
+const SIGNALS=[
+  {id:'s1',l:'Job posting spike',desc:'A sudden jump in open roles often means a company just won new business and needs to staff up fast before they have been paid for it.'},
+  {id:'s2',l:'New contract win',desc:'Landing a big contract means bigger payroll and more invoices going out, both of which create an immediate cash flow timing gap.'},
+  {id:'s3',l:'New office / expansion',desc:'Opening a new location means increased overhead and headcount before revenue catches up. A classic moment to need outside funding.'},
+  {id:'s4',l:'New C-suite hire',desc:'A new CFO, COO, or CEO is often brought in to fix financial problems, making them highly receptive to new funding solutions.'},
+];
+
+const sel={svc:new Set(),f:new Set(),s:new Set()};
+let fileReady=false,companies=[],results=[],openPanels={};
+
+function getKey(){return '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';}
+
+window.addEventListener('load',()=>{
+  renderSvc();
+});
+
+function gotFile(e){
+  const f=e.target.files[0];if(!f)return;
+  document.getElementById('fname').textContent=f.name;
+  document.getElementById('dropzone').classList.add('has-file');
+  Papa.parse(f,{complete(r){extractCompanies(r.data);},error(){
+    const reader=new FileReader();
+    reader.onload=ev=>extractCompanies(ev.target.result.split(/\n/).map(l=>[l]));
+    reader.readAsText(f);
+  }});
+}
+
+function extractCompanies(rows){
+  const names=[];
+  rows.forEach(row=>{
+    if(!row||!row.length)return;
+    const v=String(row[0]).trim();
+    if(v&&v.length>1&&!['company','name','organization','client'].includes(v.toLowerCase())&&isNaN(v)) names.push(v);
+  });
+  companies=names.slice(0,10);
+  if(!companies.length){alert('No company names found. Make sure company names are in the first column.');return;}
+  fileReady=true;
+  const tags=document.getElementById('preview-tags');
+  const show=companies.slice(0,6),extra=companies.length-show.length;
+  tags.innerHTML=show.map(n=>`<span class="preview-tag">${n}</span>`).join('')+(extra>0?`<span class="preview-tag more">+${extra} more</span>`:'');
+  document.getElementById('preview-box').classList.add('show');
+  renderSvc();
+}
+
+function makeCard(item,on,fn){
+  return `<div class="sel-card${on?' on':''}" onclick="${fn}('${item.id}')">
+    <div class="sel-card-top"><div class="sel-title">${item.l}</div><div class="sel-check"><div class="sel-dot"></div></div></div>
+    <div class="sel-desc">${item.desc}</div>
+  </div>`;
+}
+function renderSvc(){document.getElementById('svc-grid').innerHTML=SERVICES.map(s=>makeCard(s,sel.svc.has(s.id),'tSvc')).join('');document.getElementById('btn1').disabled=!(fileReady&&sel.svc.size>0);}
+function tSvc(id){sel.svc.has(id)?sel.svc.delete(id):sel.svc.add(id);renderSvc();}
+function renderFocus(){document.getElementById('focus-grid').innerHTML=FOCUS.map(f=>makeCard(f,sel.f.has(f.id),'tF')).join('');document.getElementById('btn2').disabled=!sel.f.size;}
+function tF(id){sel.f.has(id)?sel.f.delete(id):sel.f.add(id);renderFocus();}
+function renderSigs(){document.getElementById('signal-grid').innerHTML=SIGNALS.map(s=>makeCard(s,sel.s.has(s.id),'tS')).join('');document.getElementById('btn3').disabled=!sel.s.size;}
+function tS(id){sel.s.has(id)?sel.s.delete(id):sel.s.add(id);renderSigs();}
+
+function go(step){
+  for(let i=1;i<=4;i++) document.getElementById('p'+i).classList.remove('show');
+  for(let i=1;i<=4;i++){
+    const sc=document.getElementById('sc'+i),sn=document.getElementById('sn'+i);
+    sc.classList.remove('active','done');sn.classList.remove('active','done');
+    if(i<step){sc.classList.add('done');sc.innerHTML='&#10003;';sn.classList.add('done');if(i<4)document.getElementById('sl'+i).classList.add('done');}
+    else if(i===step){sc.classList.add('active');sc.innerHTML=i;sn.classList.add('active');}
+    else{sc.innerHTML=i;}
+  }
+  document.getElementById('p'+step).classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(step===1)renderSvc();
+  if(step===2)renderFocus();
+  if(step===3)renderSigs();
+  if(step===4)analyze();
+}
+
+async function analyze(){
+  document.getElementById('loader').style.display='block';
+  document.getElementById('res').style.display='none';
+  const DEMO=[
+    {name:"Summit Staffing Group",location:"Atlanta, GA",priorityScore:91,urgencyScore:94,fitScore:96,hook:"Rapid headcount expansion creates a 30 to 45 day payroll gap, textbook factoring trigger.",signals:["Job postings +340%","Won $2.1M contract","3 new branches"],outreachAngle:"CEO stated plans to scale into healthcare and warehouse. Lead with payroll gap cost vs factoring fee.",estimatedFunding:"$180K to $240K / mo",whyNow:"Job postings spiked 47% in the last 7 days. New Tampa branch opening announced. Act now.",linkedinDM:"Hey [First Name], saw Summit just opened its 3rd branch and closed a $2.1M contract this quarter. That kind of growth usually comes with a payroll timing gap before invoices clear. We help staffing firms bridge that. Worth a quick chat?",emailSubject:"Quick question about Summit's Q4 growth",emailBody:"Hi [First Name],\n\nFollowing up after connecting on LinkedIn. With Summit opening its 3rd branch and closing a $2.1M contract this quarter, your weekly payroll is likely growing faster than your receivables are clearing.\n\nWe help staffing companies bridge that 30 to 60 day gap using their own invoices. No debt, no equity.\n\nWorth a 15 minute call this week?\n\n[Your name]"},
+    {name:"PrimeForce Workforce",location:"Dallas, TX",priorityScore:84,urgencyScore:78,fitScore:88,hook:"Contractor heavy model with net 30 to 60 terms creates chronic cash flow timing risk.",signals:["Acquired smaller agency","Headcount +22% YoY","New CFO hired"],outreachAngle:"New CFO likely re-evaluating financing. Position as alternative to a bank line of credit.",estimatedFunding:"$120K to $160K / mo",whyNow:"Just announced a $1.4M logistics contract. Payroll obligations will spike within 30 days.",linkedinDM:"Hey [First Name], congrats on the $1.4M logistics contract. Contracts that size usually mean payroll jumps before the first invoice clears. We help staffing firms fund that gap fast. Open to a quick call?",emailSubject:"Congrats on the new contract, PrimeForce",emailBody:"Hi [First Name],\n\nGreat connecting on LinkedIn. That $1.4M logistics contract is a big win. Contracts that size typically mean a significant jump in payroll before the first payment clears.\n\nWe help staffing firms fund that gap using their own invoices. No bank approval needed.\n\nHappy to show you how in 10 minutes.\n\n[Your name]"},
+    {name:"Nexus Health Staffing",location:"Charlotte, NC",priorityScore:77,urgencyScore:62,fitScore:79,hook:"Healthcare staffing has long billing cycles, factoring accelerates cash for travel nurse payroll.",signals:["Expanded into travel nursing","New hospital clients","18 open roles"],outreachAngle:"Founder led business in a capital intensive niche. Travel nursing takes 60 to 90 days to collect.",estimatedFunding:"$80K to $110K / mo",whyNow:null,linkedinDM:"Hey [First Name], noticed Nexus is expanding into travel nursing. Smart move though the billing cycles can run 60 to 90 days. We help healthcare staffing firms stay funded through that gap. Worth a quick chat?",emailSubject:"Travel nursing expansion, have you planned for the billing gap?",emailBody:"Hi [First Name],\n\nThanks for connecting on LinkedIn. Travel nursing placements are notorious for 60 to 90 day billing cycles. Your nurses get paid weekly but hospital invoices take months to clear.\n\nWe help healthcare staffing firms fund that gap using their own receivables. Quick setup, no long term commitment.\n\nWould love to connect if the timing is right.\n\n[Your name]"},
+  ];
+  setTimeout(()=>{document.getElementById('loader').style.display='none';renderRes(DEMO);document.getElementById('res').style.display='block';},2200);
+}
+
+function togglePanel(i,type){
+  const lp=document.getElementById('lp-'+i),ep=document.getElementById('ep-'+i);
+  if(openPanels[i]===type){openPanels[i]=null;lp.classList.remove('show');ep.classList.remove('show');}
+  else{openPanels[i]=type;if(type==='li'){lp.classList.add('show');ep.classList.remove('show');}else{ep.classList.add('show');lp.classList.remove('show');}}
+}
+function copyEl(id){const el=document.getElementById(id);if(el)navigator.clipboard&&navigator.clipboard.writeText(el.innerText);}
+
+function scc(n){return n>=85?'s-hi':n>=65?'s-md':'s-lo';}
+function ucc(n){return n>=80?'s-urg-hi':n>=55?'s-urg-md':'s-urg-lo';}
+function fcc(n){return n>=85?'s-fit-hi':n>=65?'s-fit-md':'s-fit-lo';}
+function uc(n){return n>=80?'#A0525C':n>=55?'#B08A3A':'#5C7A5C';}
+function ul(n){return n>=80?'Act now, high urgency':n>=55?'Moderate, follow up soon':'Lower urgency, nurture';}
+
+function sparkData(score){
+  const b=Math.max(5,score-60);
+  return Array.from({length:12},(_,j)=>Math.max(1,Math.round(b*(0.4+j*0.055)+Math.random()*6)));
+}
+function drawSpark(id,data){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type:'line',data:{labels:['J','F','M','A','M','J','J','A','S','O','N','D'],datasets:[{data,borderColor:'#B08A96',borderWidth:1.5,pointRadius:0,fill:true,backgroundColor:'rgba(176,138,150,0.08)',tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}});
+}
+
+function renderRes(data){
+  const high=data.filter(d=>d.priorityScore>=85).length;
+  const urgent=data.filter(d=>d.urgencyScore>=80).length;
+  let h=`<div class="section-eyebrow" style="margin-bottom:4px;">Step four</div>
+  <div class="section-heading" style="margin-bottom:1rem;">Your prospects.</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-n">${data.length}</div><div class="stat-l">Lead count</div></div>
+    <div class="stat"><div class="stat-n accent">${high}</div><div class="stat-l">High priority</div></div>
+    <div class="stat"><div class="stat-n urgent">${urgent}</div><div class="stat-l">Urgent now</div></div>
+  </div>`;
+
+  const sparkMap={};
+  data.forEach((r,i)=>{
+    sparkMap[i]=sparkData(r.priorityScore);
+    const email=`Subject: ${r.emailSubject}\n\n${r.emailBody}`;
+    h+=`<div class="card">
+      <div class="card-top">
+        <div><div class="c-name">${r.name}</div><div class="c-loc">${r.location||''}</div></div>
+        <div class="scores-row">
+          <div class="score-col"><div class="score-num ${scc(r.priorityScore)}">${r.priorityScore}</div><div class="score-lbl">Priority</div></div>
+          <div class="score-div"></div>
+          <div class="score-col"><div class="score-num ${ucc(r.urgencyScore)}">${r.urgencyScore}</div><div class="score-lbl">Urgency</div></div>
+          <div class="score-div"></div>
+          <div class="score-col"><div class="score-num ${fcc(r.fitScore)}">${r.fitScore}%</div><div class="score-lbl">Fit score</div></div>
+        </div>
+      </div>
+      ${r.whyNow?`<div class="why-box"><div class="why-dot"></div><div class="why-txt"><strong>Why now:</strong> ${r.whyNow}</div></div>`:''}
+      <div class="fl">Hook / factoring opportunity</div>
+      <div class="fv" style="margin-bottom:12px;">${r.hook}</div>
+      <div class="hr"></div>
+      <div class="g2">
+        <div>
+          <div class="fl">Recent signals</div>
+          <div class="tags">${(r.signals||[]).map(s=>`<span class="tag tmauve">${s}</span>`).join('')}</div>
+          <div style="margin-top:10px;">
+            <div class="fl">Urgency level</div>
+            <div class="urg-bg"><div class="urg-fill" style="width:${r.urgencyScore}%;background:${uc(r.urgencyScore)};"></div></div>
+            <div class="urg-lbl">${ul(r.urgencyScore)}</div>
+          </div>
+        </div>
+        <div>
+          <div class="fl">12 month growth trajectory</div>
+          <div style="height:70px;position:relative;"><canvas id="sp-${i}"></canvas></div>
+        </div>
+      </div>
+      <div class="hr"></div>
+      <div class="fl">Outreach angle</div>
+      <div class="fv" style="margin-bottom:12px;">${r.outreachAngle}</div>
+      <div class="out-panel" id="lp-${i}">
+        <div class="o-lbl" style="color:var(--li);">LinkedIn DM</div>
+        <div class="o-msg" id="li-${i}">${r.linkedinDM}</div>
+        <div class="o-foot"><div class="o-hint">Step 1 of your outreach sequence</div><button class="btn-s li" onclick="copyEl('li-${i}')">Copy</button></div>
+      </div>
+      <div class="out-panel" id="ep-${i}">
+        <div class="o-lbl" style="color:var(--mauve-dark);">Email follow-up</div>
+        <div class="o-msg" id="em-${i}">${email}</div>
+        <div class="o-foot"><div class="o-hint">Step 2, send 2 to 3 days after LinkedIn</div><button class="btn-s ps" onclick="copyEl('em-${i}')">Copy</button></div>
+      </div>
+      <div class="cfoot">
+        <div class="fund">Est. monthly need: <strong>${r.estimatedFunding}</strong></div>
+        <div class="acts">
+          <button class="btn-s li" onclick="togglePanel(${i},'li')">LinkedIn DM</button>
+          <button class="btn-s ps" onclick="togglePanel(${i},'email')">Email follow-up</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  h+=`<button class="restart" onclick="go(1)">← Start over</button>`;
+  document.getElementById('res').innerHTML=h;
+  setTimeout(()=>data.forEach((_,i)=>drawSpark('sp-'+i,sparkMap[i])),100);
+}
+
+renderSvc();
+</script>
+</body>
+</html>
